@@ -1,4 +1,5 @@
 import { Hono } from 'hono'
+import { generatePdf } from './lib/generatePdf.js'
 import { serve } from '@hono/node-server'
 import { Server } from 'socket.io'
 
@@ -10,8 +11,21 @@ import { getAllRtcDevices } from './lib/getAllRtcDevices.js'
 const app = new Hono()
 
 // Standard API Routes
-app.get('/api/health', (c) => {
-  return c.json({ status: 'ok', time: new Date() })
+app.get('/api/health', async (c) => {
+    const html = '<h1>Memory Save PDF is healthy</h1>';
+    const pdfContent = await generatePdf(html);
+
+    if(!pdfContent.success){
+        return c.json({success: false, error: pdfContent.error}, 500)
+    }
+    const responseBody = pdfContent.pdf as unknown as BodyInit;
+    return new Response(responseBody, {
+        status: 200,
+        headers: {
+            'Content-Type': 'application/pdf',
+            'Content-Disposition': 'inline; filename=test.pdf'
+        }
+    });
 })
 
 app.post('/api/data', async (c) => {
