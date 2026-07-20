@@ -1,12 +1,17 @@
 {
   "compilerOptions": {
-    "module": "nodenext",
-    "target": "esnext",
+    "target": "ESNext",
+    "module": "NodeNext",
     "strict": true,
-    "allowJs": true,           // 🟢 ADD THIS LINE
-    "jsx": "react-jsx",
     "verbatimModuleSyntax": true,
-    "isolatedModules": true,
-    "skipLibCheck": true
-  }
+    "skipLibCheck": true,
+    "types": [
+      "node"
+    ],
+    "jsx": "react-jsx",
+    "jsxImportSource": "hono/jsx",
+    "outDir": "dist",
+    "rootDir": "./"
+  },
+  "exclude": ["node_modules"]
 }
