@@ -1,14 +1,24 @@
 import { Hono } from 'hono'
+import { cors } from 'hono/cors'
 import { generatePdf } from './lib/generatePdf.js'
 import { serve } from '@hono/node-server'
 import { Server } from 'socket.io'
 
 import validate from './lib/validate.js'
-import { mongoClient } from './lib/db.js'
 import { updateRtcDevice } from './lib/updateRtcDevice.js'
 import { getAllRtcDevices } from './lib/getAllRtcDevices.js'
+import { generatePdfHtmlFrame } from './lib/generatePdfHtmlFrame.js'
 // 1. Initialize Hono
 const app = new Hono()
+
+app.use('*', cors({
+  origin: '*', // Adjust this for production security to match your client URL
+  allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowHeaders: ['Content-Type', 'Authorization'],
+  exposeHeaders: ['Content-Length', 'Content-Disposition'],
+  maxAge: 600,
+}))
+
 
 // Standard API Routes
 app.get('/api/health', async (c) => {
@@ -24,6 +34,26 @@ app.get('/api/health', async (c) => {
         headers: {
             'Content-Type': 'application/pdf',
             'Content-Disposition': 'inline; filename=test.pdf'
+        }
+    });
+})
+
+app.post('/pdf/html', async (c) => {
+    const body = await c.req.json()
+    if(!body.html){
+        return c.json({success: false, error: 'Missing html'}, 400)
+    }
+    const htmlContent = await generatePdfHtmlFrame(body.html);
+    const pdfContent = await generatePdf(htmlContent);
+    if(!pdfContent.success){
+        return c.json({success: false, error: pdfContent.error}, 500)
+    }
+    const responseBody = pdfContent.pdf as unknown as BodyInit;
+    return new Response(responseBody, {
+        status: 200,
+        headers: {
+            'Content-Type': 'application/pdf',
+            'Content-Disposition': 'inline; filename=report.pdf'
         }
     });
 })
