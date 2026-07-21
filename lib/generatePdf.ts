@@ -7,6 +7,9 @@ export async function generatePdf(html: string, options: { width?: string, heigh
         browser = await puppeteer.launch({
             headless: true,
             args: ['--no-sandbox', '--disable-setuid-sandbox'],
+        }).catch((error) => {
+            console.error('Error launching Puppeteer:', error);
+            throw error;
         });
         const page = await browser.newPage();
         await page.setContent(html);
